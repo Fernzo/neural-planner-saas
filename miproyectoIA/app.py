@@ -85,7 +85,7 @@ try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     
     # USA EL MODELO QUE VIMOS EN TU LISTA (EL MÁS RÁPIDO Y NUEVO)
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
 except Exception as e:
     st.error(f"❌ Error de configuración: {e}")
@@ -153,3 +153,4 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and len(st.session_state.m
             st.download_button("⬇️ Guardar PDF", data=pdf_output, file_name="informe_ia.pdf", mime="application/pdf")
         except Exception as e:
             st.warning("Nota: La exportación PDF básica no soporta algunos caracteres especiales (emojis).")
+
