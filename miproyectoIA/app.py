@@ -168,7 +168,9 @@ if prompt := st.chat_input("Input command..."):
             st.session_state.messages.append({"role": "assistant", "content": response.text})
             st.rerun()
     except Exception as e:
-        st.error("System communication error. Please verify configuration.")
+        # ESTO ES EL CHIVATO
+        st.error(f"⚠️ ERROR REAL: {str(e)}")
+        st.write(e) # Esto imprime detalles técnicos
 
 # Export functionality for PRO/ULTRA
 if st.session_state.license_level in ["PRO", "ULTRA"] and st.session_state.messages:
@@ -190,5 +192,6 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and st.session_state.messa
             file_name="strategic_report.pdf",
             mime="application/pdf"
         )
+
 
 
