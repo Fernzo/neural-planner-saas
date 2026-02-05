@@ -135,6 +135,9 @@ genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 try:
     model = genai.GenerativeModel('gemini-pro')
 
+except:
+    model = genai.GenerativeModel('gemini-1.5-flash.Latest')
+
 def get_system_prompt():
     if st.session_state.license_level == "ULTRA":
         return "Eres un Consultor Estratégico de alto nivel. Tus respuestas son directas, ejecutivas y estructuradas en tablas o listas. No uses saludos cordiales excesivos."
