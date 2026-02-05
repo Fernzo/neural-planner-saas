@@ -128,12 +128,8 @@ with st.sidebar:
 
 # Configuración IA (Uso de gemini-pro para estabilidad)
 import os
-try:
-    # Intenta coger la clave de los Secretos de la nube
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-except:
-    # Si da error localmente, avisa (pero no pongas la clave aquí)
-    st.error("Falta la API Key en los secretos.")
+# En lugar de poner la clave directa:
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # Selección de modelo con fallback
 try:
@@ -194,4 +190,5 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and st.session_state.messa
             file_name="strategic_report.pdf",
             mime="application/pdf"
         )
+
 
