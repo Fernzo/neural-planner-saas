@@ -133,9 +133,7 @@ genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # Selección de modelo con fallback
 try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel('gemini-pro')
 
 def get_system_prompt():
     if st.session_state.license_level == "ULTRA":
@@ -192,6 +190,7 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and st.session_state.messa
             file_name="strategic_report.pdf",
             mime="application/pdf"
         )
+
 
 
 
