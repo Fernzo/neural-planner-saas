@@ -131,19 +131,24 @@ import os
 # En lugar de poner la clave directa:
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# Selección de modelo con fallback
-# --- BLOQUE DE CONEXIÓN ROBUSTA (ANTI-ERRORES) ---
-try:
-    # Intentamos conectar con el modelo más rápido primero
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    try:
-        # Si falla, probamos el clásico
-        model = genai.GenerativeModel('gemini-pro')
-    except:
-        # Si todo falla, intentamos el backup
-        model = genai.GenerativeModel('gemini-1.0-pro')
+# --- BLOQUE DE CONEXIÓN ROBUSTA V2 (CON PRUEBA REAL) ---
+def get_working_model():
+    # Lista de prioridades: primero el rápido, luego el clásico
+    models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro']
+    
+    for model_name in models_to_try:
+        try:
+            # Probamos si el modelo responde de verdad con un "hola" invisible
+            test_model = genai.GenerativeModel(model_name)
+            test_model.generate_content("test") 
+            return test_model # ¡Si llega aquí, es que funciona!
+        except:
+            continue # Si falla, prueba el siguiente
+            
+    # Si todo falla, devolvemos el pro por defecto
+    return genai.GenerativeModel('gemini-pro')
 
+model = get_working_model()
 # ------------------------------------------------
 
 def get_system_prompt():
@@ -201,6 +206,7 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and st.session_state.messa
             file_name="strategic_report.pdf",
             mime="application/pdf"
         )
+
 
 
 
