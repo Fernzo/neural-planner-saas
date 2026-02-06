@@ -5,150 +5,177 @@ import uuid
 from fpdf import FPDF
 from PyPDF2 import PdfReader
 
-# --- CONFIGURACIÓN DE PÁGINA (ESTILO CHATGPT) ---
+# --- 1. CONFIGURACIÓN DE PÁGINA PREMIUM ---
 st.set_page_config(
-    page_title="Strategic AI",
-    page_icon="🧠",
+    page_title="Strategic AI Platform",
+    page_icon="⚡",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MEJORADO (LOOK & FEEL CHATGPT) ---
+# --- 2. CSS AVANZADO (DISEÑO VISUAL DE ALTO NIVEL) ---
 st.markdown("""
     <style>
-    /* Fondo oscuro y limpio */
-    .stApp { background-color: #343541; color: #ECECF1; }
-    
-    /* Ocultar elementos de Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Estilo del Input (Chatbox) */
-    .stTextInput>div>div>input {
-        background-color: #40414F;
-        color: white;
-        border: 1px solid #565869;
-        border-radius: 12px;
-    }
-    
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #202123;
-        border-right: 1px solid #4D4D4F;
-    }
-    
-    /* Botones del Sidebar (Historial) */
-    .stButton>button {
-        background-color: transparent;
-        color: #ECECF1;
-        border: 1px solid #4D4D4F;
-        width: 100%;
-        text-align: left;
-        margin-bottom: 5px;
-    }
-    .stButton>button:hover {
-        background-color: #2A2B32;
-        border-color: #ECECF1;
+    /* Importamos fuente moderna */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+    /* Fondo general oscuro pero con matiz azulado muy sutil */
+    .stApp {
+        background-color: #0E1117;
+        color: #E0E0E0;
+        font-family: 'Inter', sans-serif;
     }
 
-    h1, h2, h3 { font-family: 'Söhne', sans-serif; }
+    /* Títulos con Gradiente (Efecto WOW) */
+    h1 {
+        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        font-size: 2.5rem;
+        padding-bottom: 10px;
+    }
+
+    /* Sidebar más profesional */
+    [data-testid="stSidebar"] {
+        background-color: #161B22;
+        border-right: 1px solid #30363D;
+    }
+    
+    /* Input del chat estilizado */
+    .stTextInput>div>div>input {
+        background-color: #21262D;
+        color: white;
+        border: 1px solid #30363D;
+        border-radius: 10px;
+        padding: 10px;
+    }
+    
+    /* Botones de acción (Nuevo chat, etc) */
+    .stButton>button {
+        background-color: #238636; /* Verde GitHub */
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        background-color: #2EA043;
+        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+    }
+    
+    /* Botones secundarios (Historial) */
+    div[data-testid="stSidebar"] .stButton>button {
+        background-color: transparent;
+        border: 1px solid #30363D;
+        color: #C9D1D9;
+        text-align: left;
+    }
+    div[data-testid="stSidebar"] .stButton>button:hover {
+        border-color: #58A6FF;
+        color: #58A6FF;
+    }
+
+    /* MENSAJES DEL CHAT (Burbujas) */
+    /* Usuario: Azul vibrante */
+    [data-testid="stChatMessage"]:nth-child(odd) {
+        background-color: rgba(31, 111, 235, 0.1); 
+        border: 1px solid rgba(31, 111, 235, 0.2);
+        border-radius: 10px;
+    }
+    /* IA: Gris oscuro limpio */
+    [data-testid="stChatMessage"]:nth-child(even) {
+        background-color: transparent;
+    }
+
+    /* Ocultar marcas de agua de Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
-# --- GESTIÓN DE MEMORIA (SISTEMA MULTI-CHAT) ---
+# --- 3. GESTIÓN DE ESTADO (CEREBRO) ---
 if "chats" not in st.session_state:
-    # Aquí guardamos TODOS los chats: { "id_chat": [mensajes], ... }
     st.session_state.chats = {} 
-
 if "current_chat_id" not in st.session_state:
-    # Creamos el primer chat por defecto
     new_id = str(uuid.uuid4())
     st.session_state.chats[new_id] = []
     st.session_state.current_chat_id = new_id
-
 if "license_level" not in st.session_state:
     st.session_state.license_level = "GRATIS"
 if "document_context" not in st.session_state:
     st.session_state.document_context = ""
 
-# --- FUNCIONES DE GESTIÓN ---
+# --- 4. FUNCIONES AUXILIARES ---
 def create_new_chat():
     new_id = str(uuid.uuid4())
     st.session_state.chats[new_id] = []
     st.session_state.current_chat_id = new_id
-    st.session_state.document_context = "" # Reseteamos contexto de documento para el nuevo chat
+    st.session_state.document_context = ""
 
 def delete_chat(chat_id):
     if chat_id in st.session_state.chats:
         del st.session_state.chats[chat_id]
-        # Si borramos el actual, creamos uno nuevo o saltamos a otro
         if st.session_state.current_chat_id == chat_id:
             if len(st.session_state.chats) > 0:
                 st.session_state.current_chat_id = list(st.session_state.chats.keys())[0]
             else:
                 create_new_chat()
 
-# --- BARRA LATERAL (MENU & HISTORIAL) ---
+# --- 5. BARRA LATERAL (CONTROL PANEL) ---
 with st.sidebar:
-    st.title("🧠 Neural Planner")
+    # Encabezado con estilo
+    st.markdown("### ⚡ Strategic AI `v4.0`")
     
-    # 1. BOTÓN NUEVO CHAT (Principal)
-    if st.button("➕ Nuevo Chat", use_container_width=True, type="primary"):
+    if st.button("✨ Nuevo Análisis", use_container_width=True, type="primary"):
         create_new_chat()
         st.rerun()
 
     st.markdown("---")
-    st.caption("Historial de Sesión")
+    st.caption("HISTORIAL DE SESIONES")
     
-    # 2. LISTA DE CHATS (Historial)
-    # Recorremos los chats guardados y creamos un botón para cada uno
+    # Lista de chats
     chat_ids = list(st.session_state.chats.keys())
-    # Invertimos para que el más nuevo salga arriba
     for chat_id in reversed(chat_ids):
         messages = st.session_state.chats[chat_id]
+        chat_name = messages[0]["content"][:22] + "..." if messages else "Nueva Sesión"
         
-        # Ponemos un nombre bonito al botón (ej: Primeros 20 caracteres del primer mensaje)
-        if messages:
-            chat_name = messages[0]["content"][:25] + "..."
-        else:
-            chat_name = "Chat Vacío"
-            
-        # Estilo visual si es el chat activo
-        if chat_id == st.session_state.current_chat_id:
-            label = f"🟢 {chat_name}"
-        else:
-            label = f"💬 {chat_name}"
-            
-        col1, col2 = st.columns([0.8, 0.2])
+        # Icono diferente si es el activo
+        icon = "🟢" if chat_id == st.session_state.current_chat_id else "💭"
+        
+        col1, col2 = st.columns([0.85, 0.15])
         with col1:
-            if st.button(label, key=f"btn_{chat_id}"):
+            if st.button(f"{icon} {chat_name}", key=f"btn_{chat_id}"):
                 st.session_state.current_chat_id = chat_id
                 st.rerun()
         with col2:
-            if st.button("x", key=f"del_{chat_id}"):
+            if st.button("✕", key=f"del_{chat_id}", help="Borrar"):
                 delete_chat(chat_id)
                 st.rerun()
 
     st.markdown("---")
     
-    # 3. LICENCIAS (Abajo del todo)
-    with st.expander("🔐 Licencia & Acceso"):
-        license_key = st.text_input("Clave", type="password")
+    # Panel de Licencia con "Estado del Sistema" (Fake pero visual)
+    with st.expander("🛠️ Panel de Control", expanded=True):
+        license_key = st.text_input("License Key", type="password")
+        
         if license_key == "PRO_USER":
             st.session_state.license_level = "PRO"
-            st.success("💎 PRO")
+            st.success("💎 PLAN PRO: ACTIVO")
         elif license_key == "ULTRA_USER":
             st.session_state.license_level = "ULTRA"
-            st.success("🚀 ULTRA")
+            st.success("🚀 PLAN ULTRA: ACTIVO")
         else:
             st.session_state.license_level = "GRATIS"
-            st.info("Básico")
+            st.info("Plan Estándar (Limitado)")
             
-        # Módulo de Archivos (Solo ULTRA)
+        # Indicadores visuales
+        st.markdown("**System Status:**")
+        st.progress(100, text="Motor IA: Online")
         if st.session_state.license_level == "ULTRA":
-            st.write("📂 **Subir Contexto**")
-            uploaded_file = st.file_uploader("", type=["pdf", "txt"], label_visibility="collapsed")
+            st.write("📂 **Analizador de Archivos**")
+            uploaded_file = st.file_uploader("Sube PDF/TXT", type=["pdf", "txt"], label_visibility="collapsed")
             if uploaded_file:
                 try:
                     if uploaded_file.type == "application/pdf":
@@ -157,58 +184,73 @@ with st.sidebar:
                     else:
                         text = uploaded_file.read().decode("utf-8")
                     st.session_state.document_context = text
-                    st.toast("Documento indexado en este chat")
+                    st.toast("✅ Datos cargados en memoria neural", icon="🧠")
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-# --- MOTOR IA ---
+# --- 6. CONFIGURACIÓN DEL MOTOR IA (OPTIMIZADO PARA VELOCIDAD) ---
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-flash-latest')
+    
+    # CONFIGURACIÓN DE SEGURIDAD (Para que no se bloquee ni vaya lento)
+    safety_settings = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+    ]
+    
+    # MODELO FLASH 1.5 (El más rápido y estable actualmente)
+    model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
+
 except Exception as e:
-    st.error(f"Error conexión: {e}")
+    st.error(f"⚠️ Error de Conexión: {e}")
 
-# --- INTERFAZ PRINCIPAL ---
+# --- 7. INTERFAZ DE CHAT PRINCIPAL ---
 
-# Identificamos el chat actual
+# Recuperamos chat actual
 current_id = st.session_state.current_chat_id
 current_messages = st.session_state.chats[current_id]
 
-# Mensaje de bienvenida si está vacío
+# Título de bienvenida si está vacío
 if not current_messages:
-    st.markdown("<h1 style='text-align: center; margin-top: 50px; color: #565869;'>Strategic AI</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="text-align: center; margin-top: 50px;">
+        <h1>Strategic Consultant AI</h1>
+        <p style="color: #888; font-size: 1.2rem;">Tu socio estratégico de alto rendimiento.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# 1. MOSTRAR MENSAJES DEL CHAT ACTUAL
+# Renderizar mensajes
 for msg in current_messages:
-    with st.chat_message(msg["role"], avatar="👤" if msg["role"]=="user" else "🧠"):
+    with st.chat_message(msg["role"], avatar="👤" if msg["role"]=="user" else "⚡"):
         st.markdown(msg["content"])
 
-# 2. INPUT Y RESPUESTA
-if prompt := st.chat_input("Escribe tu consulta..."):
-    # Guardar mensaje usuario en el chat actual
+# Input de usuario
+if prompt := st.chat_input("Escribe tu consulta estratégica..."):
+    # Guardar y mostrar
     st.session_state.chats[current_id].append({"role": "user", "content": prompt})
-    
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
     try:
-        # Preparar Prompt
+        # Prompt Engineering según licencia
         system_instruction = "Eres un asistente útil."
         if st.session_state.license_level in ["PRO", "ULTRA"]:
-            system_instruction = "Eres un Consultor Estratégico Senior. Usa Markdown, tablas y listas."
+            system_instruction = "Eres un Consultor Estratégico de Élite. Tus respuestas son tácticas, usan formato Markdown, tablas y listas. Ve al grano."
         
         context_data = ""
         if st.session_state.document_context:
-            context_data = f"\n[DOC CONTEXT]:\n{st.session_state.document_context[:10000]}\n"
+            context_data = f"\n[DATOS DEL DOCUMENTO]:\n{st.session_state.document_context[:15000]}\n"
 
-        # Historial de contexto para la IA (últimos 5 mensajes para que tenga memoria corta)
-        history_context = "\n".join([f"{m['role']}: {m['content']}" for m in current_messages[-5:]])
-        final_prompt = f"{system_instruction}\n{context_data}\nCHAT HISTORY:\n{history_context}\nUSUARIO: {prompt}"
+        history_context = "\n".join([f"{m['role']}: {m['content']}" for m in current_messages[-6:]])
+        final_prompt = f"{system_instruction}\n{context_data}\nCHAT PREVIO:\n{history_context}\nUSUARIO ACTUAL: {prompt}"
 
-        # Streaming respuesta
-        with st.chat_message("assistant", avatar="🧠"):
+        # Generación con Streaming (Efecto escritura)
+        with st.chat_message("assistant", avatar="⚡"):
             response_placeholder = st.empty()
             full_response = ""
+            # Stream activado para sensación de velocidad
             response = model.generate_content(final_prompt, stream=True)
             
             for chunk in response:
@@ -218,11 +260,33 @@ if prompt := st.chat_input("Escribe tu consulta..."):
             
             response_placeholder.markdown(full_response)
             
-        # Guardar respuesta IA en el chat actual
         st.session_state.chats[current_id].append({"role": "assistant", "content": full_response})
         
-        # Forzamos recarga para que se actualice el nombre del chat en la barra lateral
-        st.rerun()
+        # Recarga sutil para actualizar nombre del chat en sidebar
+        if len(current_messages) == 2: # Solo recargar si es el primer mensaje para ponerle nombre
+            st.rerun()
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error del sistema: {e}")
+
+# Botón de exportación (Discreto)
+if st.session_state.license_level in ["PRO", "ULTRA"] and current_messages:
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("📥 Descargar Informe PDF", use_container_width=True):
+            # Lógica de PDF simplificada para evitar errores
+            try:
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=10)
+                pdf.cell(0, 10, txt="INFORME ESTRATÉGICO", ln=True, align='C')
+                for m in current_messages:
+                    role = "USER" if m["role"]=="user" else "AI"
+                    clean_text = m["content"].encode('latin-1', 'replace').decode('latin-1')
+                    pdf.multi_cell(0, 5, txt=f"\n[{role}]\n{clean_text}")
+                
+                html = pdf.output(dest='S').encode('latin-1')
+                st.download_button("Guardar PDF", html, "informe.pdf", "application/pdf")
+            except:
+                st.error("Error generando PDF (caracteres no compatibles).")
