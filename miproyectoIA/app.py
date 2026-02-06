@@ -33,11 +33,11 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* ELIMINAR CAJAS DE MENSAJES */
+    /* ELIMINAR CAJAS DE MENSAJES Y BORDES */
     [data-testid="stChatMessage"] {
         background-color: transparent !important;
         border: none !important;
-        padding: 1rem 0 !important; /* Espacio vertical entre mensajes */
+        padding: 1rem 0 !important;
     }
     
     /* Sidebar oscuro */
@@ -92,7 +92,7 @@ def delete_chat(chat_id):
 # --- 5. SIDEBAR ---
 with st.sidebar:
     st.markdown("### ⚡ Strategic AI")
-    if st.button("Nuevo Chat", use_container_width=True, type="primary"):
+    if st.button("➕ Nuevo Chat", use_container_width=True, type="primary"):
         create_new_chat()
         st.rerun()
     
@@ -134,14 +134,17 @@ with st.sidebar:
                     st.toast("Datos cargados")
                 except: pass
 
-# --- 6. MOTOR IA ---
+# --- 6. MOTOR IA (CORREGIDO) ---
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     safety = [{"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
               {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
               {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
               {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}]
-    model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety)
+    
+    # AQUÍ ESTÁ EL CAMBIO: Usamos el alias universal que sabemos que funciona
+    model = genai.GenerativeModel('gemini-flash-latest', safety_settings=safety)
+
 except: st.error("Error API")
 
 # --- 7. CHAT ---
@@ -152,7 +155,6 @@ if not curr_msgs:
     st.markdown("<h1 style='text-align: center; margin-top: 100px; color: #444;'>Strategic AI</h1>", unsafe_allow_html=True)
 
 for msg in curr_msgs:
-    # AVATARES: Puedes cambiar los emojis aquí si quieres
     av = "🧑‍💻" if msg["role"]=="user" else "🧠"
     with st.chat_message(msg["role"], avatar=av):
         st.markdown(msg["content"])
@@ -181,7 +183,6 @@ if prompt := st.chat_input("..."):
             box.markdown(full)
             
         st.session_state.chats[curr_id].append({"role": "assistant", "content": full})
-        if len(curr_msgs) == 2: st.rerun() # Actualizar nombre chat
+        if len(curr_msgs) == 2: st.rerun() 
     except Exception as e:
         st.error(str(e))
-
