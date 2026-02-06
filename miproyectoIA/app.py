@@ -167,23 +167,42 @@ try:
 
 except: st.error("Error de conexión con API")
 
-# --- 7. CHAT (SIN EMOJIS - ICONOS NEUTROS) ---
+# --- 7. CHAT (CON LOGOS PERSONALIZADOS) ---
 curr_id = st.session_state.current_chat_id
 curr_msgs = st.session_state.chats[curr_id]
 
-if not curr_msgs:
-    st.markdown("<h1 style='text-align: center; margin-top: 100px; color: #666;'>Strategic AI</h1>", unsafe_allow_html=True)
+# Lógica de Avatares: Intenta cargar tus logos, si no están, usa backup
+# Asegúrate de subir 'user_icon.png' y 'ai_icon.png' a GitHub
+user_avatar = "user_icon.png" if os.path.exists("user_icon.png") else "👤"
+ai_avatar = "ai_icon.png" if os.path.exists("ai_icon.png") else "⚡"
 
+if not curr_msgs:
+    # Mensaje de bienvenida limpio
+    st.markdown("""
+    <div style="text-align: center; margin-top: 80px;">
+        <h1 style="font-size: 3rem; margin-bottom: 10px;">Strategic AI</h1>
+        <p style="color: #666;">Sistema de Consultoría Avanzada</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Renderizar historial
 for msg in curr_msgs:
-    # Al no poner avatar=..., Streamlit usa los iconos SVG neutros por defecto
-    with st.chat_message(msg["role"]):
+    # Seleccionamos el avatar correcto según el rol
+    avatar_img = user_avatar if msg["role"] == "user" else ai_avatar
+    
+    with st.chat_message(msg["role"], avatar=avatar_img):
         st.markdown(msg["content"])
 
+# Input de usuario
 if prompt := st.chat_input("Escriba su consulta..."):
+    # 1. Guardar mensaje usuario
     st.session_state.chats[curr_id].append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
+    
+    # Mostrar mensaje usuario (con su logo)
+    with st.chat_message("user", avatar=user_avatar):
         st.markdown(prompt)
 
+    # 2. Generar respuesta
     try:
         sys_prompt = "Eres un consultor experto. Sé directo y profesional."
         if st.session_state.license_level in ["PRO", "ULTRA"]:
@@ -192,9 +211,11 @@ if prompt := st.chat_input("Escriba su consulta..."):
         ctx = f"CONTEXTO:\n{st.session_state.document_context[:10000]}" if st.session_state.document_context else ""
         hist = "\n".join([f"{m['role']}: {m['content']}" for m in curr_msgs[-6:]])
         
-        with st.chat_message("assistant"):
+        # Mostrar respuesta IA (con su logo)
+        with st.chat_message("assistant", avatar=ai_avatar):
             box = st.empty()
             full = ""
+            # Llamada al modelo
             resp = model.generate_content(f"{sys_prompt}\n{ctx}\n{hist}\nUSER: {prompt}", stream=True)
             for chunk in resp:
                 if chunk.text:
@@ -203,6 +224,9 @@ if prompt := st.chat_input("Escriba su consulta..."):
             box.markdown(full)
             
         st.session_state.chats[curr_id].append({"role": "assistant", "content": full})
+        
+        # Actualizar nombre del chat si es el primer mensaje
         if len(curr_msgs) == 2: st.rerun() 
+            
     except Exception as e:
-        st.error(str(e))
+        st.error(f"Error del sistema: {str(e)}")
