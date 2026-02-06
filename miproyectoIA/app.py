@@ -92,7 +92,7 @@ def delete_chat(chat_id):
 # --- 5. SIDEBAR ---
 with st.sidebar:
     st.markdown("### ⚡ Strategic AI")
-    if st.button("➕ Nuevo Chat", use_container_width=True, type="primary"):
+    if st.button("Nuevo Chat", use_container_width=True, type="primary"):
         create_new_chat()
         st.rerun()
     
@@ -184,3 +184,4 @@ if prompt := st.chat_input("..."):
         if len(curr_msgs) == 2: st.rerun() # Actualizar nombre chat
     except Exception as e:
         st.error(str(e))
+
