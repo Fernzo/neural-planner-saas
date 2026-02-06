@@ -3,27 +3,43 @@ import google.generativeai as genai
 import os
 from fpdf import FPDF
 from PyPDF2 import PdfReader
-import io
 
-# --- CONFIGURACIÓN DE PÁGINA ---
+# --- CONFIGURACIÓN DE PÁGINA (ESTILO CHATGPT) ---
 st.set_page_config(
-    page_title="Strategic Consultant AI",
-    layout="wide",
+    page_title="Strategic AI",
+    page_icon="🧠",
+    layout="centered",  # Centrado como ChatGPT, no 'wide' que lo estira demasiado
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILO CSS MINIMALISTA (Dark Mode) ---
+# --- CSS PARA LIMPIEZA VISUAL (LOOK & FEEL CHATGPT) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #0E1117; color: #FFFFFF; font-family: 'Inter', sans-serif; }
-    [data-testid="stSidebar"] { background-color: #161B22; border-right: 1px solid #30363D; }
-    .stTextInput>div>div>input { background-color: #0E1117; color: white; border: 1px solid #30363D; }
-    .stButton>button { background-color: #238636; color: white; border: none; border-radius: 6px; }
-    .stButton>button:hover { background-color: #2ea043; }
+    /* Fondo principal oscuro */
+    .stApp { background-color: #343541; color: #ECECF1; }
     
-    /* Mensajes del Chat */
-    .user-msg { background-color: #1F6FEB; color: white; padding: 10px; border-radius: 8px; margin: 5px 0 5px 20%; text-align: right; }
-    .ai-msg { background-color: #21262D; color: #E6EDF3; padding: 10px; border-radius: 8px; margin: 5px 20% 5px 0; border: 1px solid #30363D; }
+    /* Ocultar elementos de Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Estilo del Input (abajo) */
+    .stTextInput>div>div>input {
+        background-color: #40414F;
+        color: white;
+        border: 1px solid #565869;
+        border-radius: 12px;
+    }
+    
+    /* Sidebar estilo oscuro */
+    [data-testid="stSidebar"] {
+        background-color: #202123;
+        border-right: 1px solid #4D4D4F;
+    }
+    
+    /* Ajustes de texto */
+    h1, h2, h3 { color: #ECECF1; font-family: 'Söhne', sans-serif; }
+    p { font-size: 16px; line-height: 1.6; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -35,30 +51,30 @@ if "license_level" not in st.session_state:
 if "document_context" not in st.session_state:
     st.session_state.document_context = ""
 
-# --- BARRA LATERAL (Licencias y Archivos) ---
+# --- BARRA LATERAL (MENU) ---
 with st.sidebar:
-    st.title("🧠 Strategic AI")
-    st.caption("v2.0 - Powered by Gemini Flash")
+    st.title("🧠 Neural Planner")
+    st.caption("Strategic Consultant v2.1")
     st.markdown("---")
     
-    # Sistema de Licencias
-    license_key = st.text_input("License Key", type="password")
+    # Login
+    license_key = st.text_input("Clave de Acceso", type="password", placeholder="Introduce tu clave...")
     
     if license_key == "PRO_USER":
         st.session_state.license_level = "PRO"
-        st.success("💎 PLAN PRO ACTIVO")
+        st.success("💎 MODO PRO ACTIVO")
     elif license_key == "ULTRA_USER":
         st.session_state.license_level = "ULTRA"
-        st.success("🚀 PLAN ULTRA ACTIVO")
+        st.success("🚀 MODO ULTRA ACTIVO")
     else:
         st.session_state.license_level = "GRATIS"
-        st.info("Plan Estándar")
+        st.info("Plan Básico")
 
-    # Subida de Archivos (Solo ULTRA)
+    # Módulo de Archivos (Solo ULTRA)
     if st.session_state.license_level == "ULTRA":
         st.markdown("---")
-        st.write("📂 **Analista de Documentos**")
-        uploaded_file = st.file_uploader("Sube PDF o TXT", type=["pdf", "txt"])
+        st.write("📂 **Contexto (PDF/TXT)**")
+        uploaded_file = st.file_uploader("Analizar documento", type=["pdf", "txt"], label_visibility="collapsed")
         
         if uploaded_file:
             try:
@@ -69,88 +85,41 @@ with st.sidebar:
                     text = uploaded_file.read().decode("utf-8")
                 
                 st.session_state.document_context = text
-                st.toast("Documento indexado con éxito!", icon="✅")
+                st.toast("✅ Documento asimilado en memoria")
             except Exception as e:
-                st.error(f"Error leyendo archivo: {e}")
+                st.error(f"Error de lectura: {e}")
 
     st.markdown("---")
-    if st.button("🗑️ Borrar Historial"):
+    if st.button("🗑️ Nuevo Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.document_context = ""
         st.rerun()
 
-# --- MOTOR DE INTELIGENCIA ARTIFICIAL ---
+# --- MOTOR IA (CONEXIÓN) ---
 try:
-    # Configuración Segura
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    
-    # USA EL MODELO QUE VIMOS EN TU LISTA (EL MÁS RÁPIDO Y NUEVO)
+    # Usamos el modelo robusto que funcionó
     model = genai.GenerativeModel('gemini-flash-latest')
-
 except Exception as e:
-    st.error(f"❌ Error de configuración: {e}")
+    st.error(f"❌ Error de conexión: {e}")
 
-# --- INTERFAZ DE CHAT ---
-st.markdown("### Asistente Estratégico IA")
+# --- INTERFAZ PRINCIPAL (ESTILO CHATGPT NATIVO) ---
 
-# Mostrar historial
+# Título discreto
+if not st.session_state.messages:
+    st.markdown("<h1 style='text-align: center; margin-top: 50px;'>¿En qué puedo ayudarte hoy?</h1>", unsafe_allow_html=True)
+
+# 1. MOSTRAR MENSAJES ANTERIORES
+# Usamos st.chat_message que crea el formato avatar + texto automáticamente
 for msg in st.session_state.messages:
-    css_class = "user-msg" if msg["role"] == "user" else "ai-msg"
-    st.markdown(f"<div class='{css_class}'>{msg['content']}</div>", unsafe_allow_html=True)
+    role = msg["role"]
+    # Iconos personalizados
+    avatar = "👤" if role == "user" else "🧠"
+    
+    with st.chat_message(role, avatar=avatar):
+        st.markdown(msg["content"])
 
-# Input de usuario
-if prompt := st.chat_input("Escribe tu consulta estratégica aquí..."):
-    # 1. Guardar y mostrar mensaje usuario
+# 2. CAPTURA DE INPUT Y RESPUESTA
+if prompt := st.chat_input("Envía un mensaje..."):
+    # Guardar y mostrar mensaje usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.rerun()
-
-# Respuesta de la IA (se ejecuta al recargar)
-if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-    with st.spinner("💡 Analizando estrategia..."):
-        try:
-            # Preparar contexto
-            user_msg = st.session_state.messages[-1]["content"]
-            system_instruction = "Eres un consultor experto. Responde de forma breve y profesional."
-            
-            if st.session_state.license_level in ["PRO", "ULTRA"]:
-                system_instruction = "Eres un Consultor Estratégico Senior. Usa formato Markdown, listas y tablas."
-            
-            context_data = ""
-            if st.session_state.document_context:
-                context_data = f"\nCONTEXTO DEL DOCUMENTO:\n{st.session_state.document_context[:10000]}\n"
-
-            final_prompt = f"{system_instruction}\n{context_data}\nUSUARIO: {user_msg}"
-
-            # Generar respuesta
-            response = model.generate_content(final_prompt)
-            ai_reply = response.text
-            
-            st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-            st.rerun()
-            
-        except Exception as e:
-            st.error(f"⚠️ Error al generar respuesta: {e}")
-
-# --- EXPORTAR A PDF (Solo PRO/ULTRA) ---
-if st.session_state.license_level in ["PRO", "ULTRA"] and len(st.session_state.messages) > 0:
-    st.markdown("---")
-    if st.button("📄 Descargar Informe PDF"):
-        try:
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Informe Estratégico IA", ln=True, align='C')
-            pdf.ln(10)
-            
-            for msg in st.session_state.messages:
-                role = "USUARIO" if msg["role"] == "user" else "IA"
-                text = f"{role}: {msg['content']}\n\n"
-                # Limpieza básica de caracteres para FPDF
-                safe_text = text.encode('latin-1', 'replace').decode('latin-1')
-                pdf.multi_cell(0, 10, txt=safe_text)
-            
-            pdf_output = pdf.output(dest='S').encode('latin-1')
-            st.download_button("⬇️ Guardar PDF", data=pdf_output, file_name="informe_ia.pdf", mime="application/pdf")
-        except Exception as e:
-            st.warning("Nota: La exportación PDF básica no soporta algunos caracteres especiales (emojis).")
-
