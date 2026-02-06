@@ -201,7 +201,7 @@ try:
     ]
     
     # MODELO FLASH 1.5 (El más rápido y estable actualmente)
-    model = genai.GenerativeModel('gemini-1.5-flash', safety_settings=safety_settings)
+    model = genai.GenerativeModel('gemini-flash-latest', safety_settings=safety_settings)
 
 except Exception as e:
     st.error(f"⚠️ Error de Conexión: {e}")
@@ -290,3 +290,4 @@ if st.session_state.license_level in ["PRO", "ULTRA"] and current_messages:
                 st.download_button("Guardar PDF", html, "informe.pdf", "application/pdf")
             except:
                 st.error("Error generando PDF (caracteres no compatibles).")
+
