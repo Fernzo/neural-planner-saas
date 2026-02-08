@@ -167,42 +167,42 @@ try:
 
 except: st.error("Error de conexión con API")
 
-# --- 7. CHAT (CON LOGOS PERSONALIZADOS) ---
+# --- 7. CHAT (LÓGICA DE AVATARES ROBUSTA) ---
 curr_id = st.session_state.current_chat_id
 curr_msgs = st.session_state.chats[curr_id]
 
-# Lógica de Avatares: Intenta cargar tus logos, si no están, usa backup
-# Asegúrate de subir 'user_icon.png' y 'ai_icon.png' a GitHub
-user_avatar = "user_icon.png" if os.path.exists("user_icon.png") else "👤"
-ai_avatar = "ai_icon.png" if os.path.exists("ai_icon.png") else "⚡"
+# 1. BUSCAMOS LOS LOGOS DONDE REALMENTE ESTÁN (Junto a app.py)
+# Obtenemos la ruta exacta de este archivo script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construimos la ruta completa a las imágenes
+user_img_path = os.path.join(script_dir, "user_icon.png")
+ai_img_path = os.path.join(script_dir, "ai_icon.png")
+
+# 2. DEFINIMOS LOS AVATARES
+# Si encuentra el archivo, usa la imagen. Si no, usa None (Icono gris default de Streamlit, NO emoji)
+user_avatar = user_img_path if os.path.exists(user_img_path) else None
+ai_avatar = ai_img_path if os.path.exists(ai_img_path) else None
+
+# Verificación silenciosa (para ti): Si quieres saber si fallan, descomenta esto:
+# if not user_avatar: st.toast("⚠️ No encuentro user_icon.png", icon="❌")
 
 if not curr_msgs:
-    # Mensaje de bienvenida limpio
-    st.markdown("""
-    <div style="text-align: center; margin-top: 80px;">
-        <h1 style="font-size: 3rem; margin-bottom: 10px;">Strategic AI</h1>
-        <p style="color: #666;">Sistema de Consultoría Avanzada</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 100px; color: #666;'>Strategic AI</h1>", unsafe_allow_html=True)
 
-# Renderizar historial
 for msg in curr_msgs:
-    # Seleccionamos el avatar correcto según el rol
-    avatar_img = user_avatar if msg["role"] == "user" else ai_avatar
-    
-    with st.chat_message(msg["role"], avatar=avatar_img):
+    # Asignar avatar correcto
+    avatar_use = user_avatar if msg["role"] == "user" else ai_avatar
+    with st.chat_message(msg["role"], avatar=avatar_use):
         st.markdown(msg["content"])
 
-# Input de usuario
 if prompt := st.chat_input("Escriba su consulta..."):
-    # 1. Guardar mensaje usuario
     st.session_state.chats[curr_id].append({"role": "user", "content": prompt})
     
-    # Mostrar mensaje usuario (con su logo)
+    # Mostrar input usuario con su logo
     with st.chat_message("user", avatar=user_avatar):
         st.markdown(prompt)
 
-    # 2. Generar respuesta
     try:
         sys_prompt = "Eres un consultor experto. Sé directo y profesional."
         if st.session_state.license_level in ["PRO", "ULTRA"]:
@@ -211,11 +211,10 @@ if prompt := st.chat_input("Escriba su consulta..."):
         ctx = f"CONTEXTO:\n{st.session_state.document_context[:10000]}" if st.session_state.document_context else ""
         hist = "\n".join([f"{m['role']}: {m['content']}" for m in curr_msgs[-6:]])
         
-        # Mostrar respuesta IA (con su logo)
+        # Mostrar respuesta IA con su logo
         with st.chat_message("assistant", avatar=ai_avatar):
             box = st.empty()
             full = ""
-            # Llamada al modelo
             resp = model.generate_content(f"{sys_prompt}\n{ctx}\n{hist}\nUSER: {prompt}", stream=True)
             for chunk in resp:
                 if chunk.text:
@@ -224,9 +223,6 @@ if prompt := st.chat_input("Escriba su consulta..."):
             box.markdown(full)
             
         st.session_state.chats[curr_id].append({"role": "assistant", "content": full})
-        
-        # Actualizar nombre del chat si es el primer mensaje
         if len(curr_msgs) == 2: st.rerun() 
-            
     except Exception as e:
-        st.error(f"Error del sistema: {str(e)}")
+        st.error(str(e))
