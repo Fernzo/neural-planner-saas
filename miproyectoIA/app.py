@@ -226,3 +226,32 @@ if prompt := st.chat_input("Escriba su consulta..."):
         if len(curr_msgs) == 2: st.rerun() 
     except Exception as e:
         st.error(str(e))
+
+# --- 8. EXPORTAR A PDF (ESTO SE HABÍA BORRADO) ---
+if st.session_state.license_level in ["PRO", "ULTRA"] and curr_msgs:
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("📥 DESCARGAR INFORME", use_container_width=True):
+            try:
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=10)
+                pdf.cell(0, 10, txt="INFORME ESTRATÉGICO", ln=True, align='C')
+                
+                for m in curr_msgs:
+                    role = "CLIENTE" if m["role"]=="user" else "CONSULTOR"
+                    # Limpieza técnica para evitar errores de caracteres raros
+                    clean_text = m["content"].encode('latin-1', 'replace').decode('latin-1')
+                    
+                    pdf.set_font("Arial", 'B', 10)
+                    pdf.cell(0, 8, txt=role, ln=True)
+                    pdf.set_font("Arial", '', 10)
+                    pdf.multi_cell(0, 5, txt=clean_text)
+                    pdf.ln(4)
+                
+                html = pdf.output(dest='S').encode('latin-1')
+                st.download_button("Guardar PDF", html, "informe_estrategico.pdf", "application/pdf")
+            except Exception as e:
+                st.error(f"Error generando PDF: {e}")
+
